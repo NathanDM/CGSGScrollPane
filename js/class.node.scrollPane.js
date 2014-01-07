@@ -204,9 +204,6 @@ var CGSGNodeScrollPane = CGSGNode.extend({
 
         this.sliderWidth = 15;
 
-        this.xSliderInit = false;
-        this.ySliderInit = false;
-
         this.resizeTo(width, height);
         this._build();
 
@@ -222,27 +219,22 @@ var CGSGNodeScrollPane = CGSGNode.extend({
      *
      * */
     _build: function () {
-
-        var viewPortWidth = this.getWidth(),
-            viewPortHeight = this.getHeight();
-
-//        this._viewport = new CGSGNodeScrollPaneViewPort(0, 0, viewPortWidth, viewPortHeight);
         this._buildYSlider();
         this._buildXSlider();
         this.addChild(this._viewport);
-
     },
 
     _buildXSlider: function () {
         //Horizontal slider
         this.xSlider = new CGSGNodeSlider(0, this._viewport.getHeight(), this._viewport.getWidth(), this.sliderWidth);
 
-
+        //Build the handler of the slider
         var xHandle = new CGSGNodeScrollPaneSliderHandle(20);
         this.xSlider.rounding = this.rounding;
         this.xSlider.setHandle(xHandle, 0, 0);
         this.xSlider.mustRenderValue = false;
 
+        //bind drag event
         CGSG.eventManager.bindHandler(this.xSlider.getHandle(), cgsgEventTypes.ON_DRAG, this.onSliderTranslate.bind(this));
         CGSG.eventManager.bindHandler(this.xSlider.getHandle(), cgsgEventTypes.ON_DRAG_END, this.onSliderTranslateEnd.bind(this));
 
@@ -257,11 +249,12 @@ var CGSGNodeScrollPane = CGSGNode.extend({
         //vertical Slider
         this.ySlider = new CGSGNodeSlider(this._viewport.getWidth(), 0, this.sliderWidth, this._viewport.getHeight());
 
-
+        //Build the handler of the slider
         var yHandle = new CGSGNodeScrollPaneSliderHandle(20);
         this.ySlider.rounding = this.rounding;
         this.ySlider.setHandle(yHandle, 0, 0);
 
+        //bind drag event
         this.ySlider.mustRenderValue = false;
         CGSG.eventManager.bindHandler(this.ySlider.getHandle(), cgsgEventTypes.ON_DRAG, this.onSliderTranslate.bind(this));
         CGSG.eventManager.bindHandler(this.ySlider.getHandle(), cgsgEventTypes.ON_DRAG_END, this.onSliderTranslateEnd.bind(this));
@@ -273,6 +266,12 @@ var CGSGNodeScrollPane = CGSGNode.extend({
         this.ySlider.isTraversable = false;
     },
 
+    /**
+     * <p>
+     *     Scroll the content of the scrollPane when handler slide.
+     * </p>
+     * @param event
+     */
     onSliderTranslate: function (event) {
         this.contained.translateTo(-this.xSlider.value, -this.ySlider.value, false);
     },
@@ -295,31 +294,38 @@ var CGSGNodeScrollPane = CGSGNode.extend({
             this.viewPortAreaWidth = this.contained.getWidth();
             this.viewPortAreaHeight = this.contained.getHeight();
 
+            //Must render the horizontal slider
             if(this.viewPortAreaHeight > this._viewport.getHeight()) {
                 this.showSlider(this.ySlider);
             } else if (cgsgExist(this.ySlider) && this.ySlider.isVisible) {
                 this.hideSlider(this.ySlider);
             }
 
+            //Must render the vertical slider
             if (this.viewPortAreaWidth > this._viewport.getWidth()) {
                 this.showSlider(this.xSlider);
             } else if (cgsgExist(this.xSlider) && this.xSlider.isVisible) {
                 this.hideSlider(this.xSlider);
             }
 
-            this.ySlider.translateTo(this._viewport.getWidth(), 0, false);
-            this.xSlider.translateTo(0, this._viewport.getHeight(), false);
 
-            this.ySlider.resizeTo(this.sliderWidth, this._viewport.getHeight());
-            this.xSlider.resizeTo(this._viewport.getWidth(), this.sliderWidth);
+            //Update the dimensions and position of the sliders
+            //Re-initialize the slider value
+            if (this.xSlider.isVisible) {
+                this.xSlider.translateTo(0, this._viewport.getHeight(), false);
+                this.xSlider.resizeTo(this._viewport.getWidth(), this.sliderWidth);
+                this.xSlider.setMin(0);
+                this.xSlider.setMax(this.viewPortAreaWidth - this._viewport.getWidth());
+                this.xSlider.setValue(0);
+            }
 
-            this.xSlider.setMin(0);
-            this.xSlider.setMax(this.viewPortAreaWidth - this._viewport.getWidth());
-            this.xSlider.setValue(0);
-
-            this.ySlider.setMin(0);
-            this.ySlider.setMax(this.viewPortAreaHeight - this._viewport.getHeight());
-            this.ySlider.setValue(0);
+            if (this.ySlider.isVisible) {
+                this.ySlider.translateTo(this._viewport.getWidth(), 0, false);
+                this.ySlider.resizeTo(this.sliderWidth, this._viewport.getHeight());
+                this.ySlider.setMin(0);
+                this.ySlider.setMax(this.viewPortAreaHeight - this._viewport.getHeight());
+                this.ySlider.setValue(0);
+            }
 
         }
     },
@@ -364,7 +370,6 @@ var CGSGNodeScrollPane = CGSGNode.extend({
      * */
     resizeTo: function (newWidth, newHeight) {
         this.dimension.resizeTo(newWidth, newHeight);
-        //TODO check if scrollBar are visible
         this._viewport.dimension.resizeTo(newWidth,newHeight);
         this.updateViewPort();
     },
@@ -403,6 +408,12 @@ var CGSGNodeScrollPane = CGSGNode.extend({
         this.updateViewPort();
     },
 
+    /**
+     * <p>
+     *     Display the slider given in param.
+     * </p>
+     * @param slider
+     */
     showSlider: function (slider) {
         if(!slider.isVisible) {
             slider.isVisible = true;
@@ -416,6 +427,12 @@ var CGSGNodeScrollPane = CGSGNode.extend({
         }
     },
 
+    /**
+     * <p>
+     *     Hide the slider given in param.
+     * </p>
+     * @param slider
+     */
     hideSlider: function (slider) {
         if(slider.isVisible) {
             slider.isVisible = false;
