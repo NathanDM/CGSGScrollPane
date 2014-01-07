@@ -198,6 +198,7 @@ var CGSGNodeScrollPaneViewPort = CGSGNode.extend({
 var CGSGNodeScrollPane = CGSGNode.extend({
 
     initialize: function (x, y, width, height) {
+        this._viewport = new CGSGNodeScrollPaneViewPort(0, 0, width, height);
         this._super(x, y);
         this.rounding = 0;
 
@@ -225,7 +226,9 @@ var CGSGNodeScrollPane = CGSGNode.extend({
         var viewPortWidth = this.getWidth(),
             viewPortHeight = this.getHeight();
 
-        this._viewport = new CGSGNodeScrollPaneViewPort(0, 0, viewPortWidth, viewPortHeight);
+//        this._viewport = new CGSGNodeScrollPaneViewPort(0, 0, viewPortWidth, viewPortHeight);
+        this._buildYSlider();
+        this._buildXSlider();
         this.addChild(this._viewport);
 
     },
@@ -233,6 +236,7 @@ var CGSGNodeScrollPane = CGSGNode.extend({
     _buildXSlider: function () {
         //Horizontal slider
         this.xSlider = new CGSGNodeSlider(0, this._viewport.getHeight(), this._viewport.getWidth(), this.sliderWidth);
+
 
         var xHandle = new CGSGNodeScrollPaneSliderHandle(20);
         this.xSlider.rounding = this.rounding;
@@ -243,12 +247,16 @@ var CGSGNodeScrollPane = CGSGNode.extend({
         CGSG.eventManager.bindHandler(this.xSlider.getHandle(), cgsgEventTypes.ON_DRAG_END, this.onSliderTranslateEnd.bind(this));
 
         this.addChild(this.xSlider);
-        this.xSliderInit = true;
+
+        //Not rendered if not needed
+        this.xSlider.isVisible = false;
+        this.xSlider.isTraversable = false;
     },
 
     _buildYSlider: function () {
         //vertical Slider
         this.ySlider = new CGSGNodeSlider(this._viewport.getWidth(), 0, this.sliderWidth, this._viewport.getHeight());
+
 
         var yHandle = new CGSGNodeScrollPaneSliderHandle(20);
         this.ySlider.rounding = this.rounding;
@@ -259,20 +267,14 @@ var CGSGNodeScrollPane = CGSGNode.extend({
         CGSG.eventManager.bindHandler(this.ySlider.getHandle(), cgsgEventTypes.ON_DRAG_END, this.onSliderTranslateEnd.bind(this));
 
         this.addChild(this.ySlider);
-        this.ySliderInit = true;
+
+        //Not rendered if not needed
+        this.ySlider.isVisible = false;
+        this.ySlider.isTraversable = false;
     },
 
     onSliderTranslate: function (event) {
-        var x = this.contained.position.x,
-            y = this.contained.position.y;
-
-        if(this.xSliderInit) {
-            x =   -this.xSlider.value;
-        }
-        if(this.ySliderInit) {
-            y = -this.ySlider.value;
-        }
-        this.contained.translateTo(x, y, false);
+        this.contained.translateTo(-this.xSlider.value, -this.ySlider.value, false);
     },
 
     onSliderTranslateEnd: function (event) {
@@ -293,28 +295,32 @@ var CGSGNodeScrollPane = CGSGNode.extend({
             this.viewPortAreaWidth = this.contained.getWidth();
             this.viewPortAreaHeight = this.contained.getHeight();
 
-            if(this.viewPortAreaHeight > this.getHeight()) {
-
-                if (!this.ySliderInit) {
-                    this._viewport.resizeWith(-this.sliderWidth, 0);
-                    this._buildYSlider();
-                }
-
-                this.ySlider.setMin(0);
-                this.ySlider.setMax(this.viewPortAreaHeight - this._viewport.getHeight());
-                this.ySlider.setValue(0);
+            if(this.viewPortAreaHeight > this._viewport.getHeight()) {
+                this.showSlider(this.ySlider);
+            } else if (cgsgExist(this.ySlider) && this.ySlider.isVisible) {
+                this.hideSlider(this.ySlider);
             }
 
-            if (this.viewPortAreaWidth > this.getWidth()) {
-                if (!this.xSliderInit) {
-                    this._viewport.resizeWith(0, -this.sliderWidth);
-                    this._buildXSlider();
-                }
-                this.xSlider.setMin(0);
-                this.xSlider.setMax(this.viewPortAreaWidth - this._viewport.getWidth());
-                this.xSlider.setValue(0);
-
+            if (this.viewPortAreaWidth > this._viewport.getWidth()) {
+                this.showSlider(this.xSlider);
+            } else if (cgsgExist(this.xSlider) && this.xSlider.isVisible) {
+                this.hideSlider(this.xSlider);
             }
+
+            this.ySlider.translateTo(this._viewport.getWidth(), 0, false);
+            this.xSlider.translateTo(0, this._viewport.getHeight(), false);
+
+            this.ySlider.resizeTo(this.sliderWidth, this._viewport.getHeight());
+            this.xSlider.resizeTo(this._viewport.getWidth(), this.sliderWidth);
+
+            this.xSlider.setMin(0);
+            this.xSlider.setMax(this.viewPortAreaWidth - this._viewport.getWidth());
+            this.xSlider.setValue(0);
+
+            this.ySlider.setMin(0);
+            this.ySlider.setMax(this.viewPortAreaHeight - this._viewport.getHeight());
+            this.ySlider.setValue(0);
+
         }
     },
 
@@ -358,6 +364,8 @@ var CGSGNodeScrollPane = CGSGNode.extend({
      * */
     resizeTo: function (newWidth, newHeight) {
         this.dimension.resizeTo(newWidth, newHeight);
+        //TODO check if scrollBar are visible
+        this._viewport.dimension.resizeTo(newWidth,newHeight);
         this.updateViewPort();
     },
 
@@ -374,6 +382,7 @@ var CGSGNodeScrollPane = CGSGNode.extend({
      * */
     resizeBy: function (widthFactor, heightFactor) {
         this.dimension.resizeBy(widthFactor, heightFactor);
+        this._viewport.dimension.resizeBy(widthFactor,heightFactor);
         this.updateViewPort();
     },
 
@@ -390,7 +399,34 @@ var CGSGNodeScrollPane = CGSGNode.extend({
      * */
     resizeWith: function (width, height) {
         this.dimension.resizeWith(width, height);
+        this._viewport.dimension.resizeWith(width,height);
         this.updateViewPort();
+    },
+
+    showSlider: function (slider) {
+        if(!slider.isVisible) {
+            slider.isVisible = true;
+            slider.isTraversable = true;
+
+            if(slider.getWidth() > slider.getHeight()) {
+                this._viewport.resizeWith(0, -this.sliderWidth);
+            } else {
+                this._viewport.resizeWith(-this.sliderWidth, 0);
+            }
+        }
+    },
+
+    hideSlider: function (slider) {
+        if(slider.isVisible) {
+            slider.isVisible = false;
+            slider.isTraversable = false;
+
+            if(slider.getWidth() > slider.getHeight()) {
+                this._viewport.resizeWith(0, this.sliderWidth);
+            } else {
+                this._viewport.resizeWith(this.sliderWidth, 0);
+            }
+        }
     }
 
 });

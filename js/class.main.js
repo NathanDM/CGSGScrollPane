@@ -26,8 +26,8 @@ var CGMain = CGSGView.extend(
             var i,
                 itemSize = 40,
                 padding = 5,
-                column = 6,
-                core = new CGSGNodeSquare(0, 0, 400, 200),
+                column = 11,
+                core = new CGSGNodeSquare(0, 0, 500, 500),
                 item;
 
             //create and add a root node to the scene, with arbitrary dimension
@@ -35,23 +35,20 @@ var CGMain = CGSGView.extend(
             CGSG.sceneGraph.addNode(this.rootNode, null);
 
             core.color = "yellow";
-            core.isClickable = true;
-            core.isTraversable = true;
-            core.isDraggable = true;
-            core.isResizable = true;
-            this.viewport = new CGSGNodeScrollPane(15, 15, 200, 200);
 
-            for (i = 0; i < 30; i++) {
-                item = new CGSGNodeSquare(Math.floor(i % column) * (itemSize + padding), Math.floor(i / column) * (itemSize + padding), itemSize, itemSize);
-                item.isClickable = true;
-                item.isTraversable = false;
-                item.isDraggable = true;
-                item.isResizable = true;
+            this.viewport = new CGSGNodeScrollPane(15, 15, 200, 200);
+            this.viewport.isClickable = true;
+            this.viewport.isTraversable = true;
+            this.viewport.isDraggable = true;
+            this.viewport.isResizable = true;
+
+            for (i = 0; i < 121; i++) {
+                item = new CGSGNodeSquare(Math.floor(i % column) * (itemSize + padding) + padding, Math.floor(i / column) * (itemSize + padding) + padding, itemSize, itemSize);
                 core.addChild(item);
             }
 
             this.viewport.addToViewPort(core);
-
+             this.viewport._viewport.isTraversable=false;
             this.rootNode.addChild(this.viewport);
         }
     }
