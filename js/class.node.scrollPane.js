@@ -126,11 +126,8 @@ var CGSGNodeScrollPaneViewPort = CGSGNode.extend({
     },
 
     draw: function (context) {
-
-        context.beginPath();
         context.rect(0, 0, this.getWidth(), this.getHeight());
-        context.closePath();
-
+        //Constraint the render of the children in the node's region
         context.clip();
     },
 
@@ -160,39 +157,9 @@ var CGSGNodeScrollPaneViewPort = CGSGNode.extend({
             }
         }
 
-        var offset = 25;
-
-        if (this.contained != null) {
-            var leftOffset = Math.min(offset, Math.abs(this.container.position.x / 5)) - offset,
-                rightOffset = this.getWidth() - Math.min(offset, Math.abs( this.contained.getWidth() + this.container.position.x - this.getWidth()));
-
-            if (this._parentNode.xSlider.isRequired) {
-                var gradient = context.createLinearGradient(leftOffset, this.getHeight(), leftOffset + offset, this.getHeight());
-                gradient.addColorStop(0, 'rgba(0,0,0,0.7)');
-                gradient.addColorStop(0.5, 'rgba(0,0,0,0.45)');
-                gradient.addColorStop(1, 'rgba(0,0,0,0)');
-                context.fillStyle = gradient;
-                context.beginPath();
-                context.rect(leftOffset, 0, this.getWidth(), this.getHeight());
-                context.closePath();
-                context.fill();
-                gradient = context.createLinearGradient(rightOffset, this.getHeight(), rightOffset + offset, this.getHeight());
-                gradient.addColorStop(0, 'rgba(0,0,0,0.0)');
-                gradient.addColorStop(0.5, 'rgba(0,0,0,0.45)');
-                gradient.addColorStop(1, 'rgba(0,0,0,0.7)');
-                context.fillStyle = gradient;
-                context.beginPath();
-                context.rect(rightOffset, 0, rightOffset + offset, this.getHeight());
-                context.closePath();
-                context.fill();
-            }
-        }
-
         //restore the context state
         context.restore();
-
     }
-
 });
 
 var CGSGNodeScrollPane = CGSGNode.extend({
@@ -219,9 +186,9 @@ var CGSGNodeScrollPane = CGSGNode.extend({
      *
      * */
     _build: function () {
+        this.addChild(this._viewport);
         this._buildYSlider();
         this._buildXSlider();
-        this.addChild(this._viewport);
     },
 
     _buildXSlider: function () {

@@ -1,7 +1,6 @@
 var CGMain = CGSGView.extend(
     {
         initialize : function(canvas) {
-
             this._super(canvas);
 
             ////// INITIALIZATION /////////
@@ -34,21 +33,24 @@ var CGMain = CGSGView.extend(
             this.rootNode = new CGSGNode(0, 0);
             CGSG.sceneGraph.addNode(this.rootNode, null);
 
-            core.color = "yellow";
-
+            //Build hte scrollPane
             this.viewport = new CGSGNodeScrollPane(15, 15, 200, 200);
-            this.viewport.isClickable = true;
-            this.viewport.isTraversable = true;
-            this.viewport.isDraggable = true;
-            this.viewport.isResizable = true;
+            this.viewport.pickNodeMethod =   CGSGPickNodeMethod.GHOST;
+            this.viewport._viewport.pickNodeMethod =   CGSGPickNodeMethod.GHOST;
 
+            //Create a content for the ScrollPane
+            core.color = "yellow";
             for (i = 0; i < 121; i++) {
                 item = new CGSGNodeSquare(Math.floor(i % column) * (itemSize + padding) + padding, Math.floor(i / column) * (itemSize + padding) + padding, itemSize, itemSize);
+                item.isClickable = true;
+                item.isTraversable = true;
+                item.isDraggable = true;
+                item.isResizable = true;
                 core.addChild(item);
             }
 
+            //add the content to the viewPort of the scrollPane
             this.viewport.addToViewPort(core);
-             this.viewport._viewport.isTraversable=false;
             this.rootNode.addChild(this.viewport);
         }
     }
