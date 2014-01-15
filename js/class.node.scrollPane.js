@@ -10,14 +10,12 @@
  */
 var CGSGNodeScrollPaneSliderHandle = CGSGNode.extend({
 
-    initialize: function (handleWidth) {
+    initialize: function () {
         this._super(0, 0);
-        this.resizeTo(handleWidth, handleWidth);
         this.color = "#505050";
         this.rotationCenter = new CGSGPosition(0.5, 0.5);
         this.selectionHandleColor = 'rgba(0,0,0,0)';
         this.selectionLineColor = 'rgba(0,0,0,0)';
-        this.handleWidth = handleWidth;
         this.isDraggable = true;
         this.isRoundingFixed = true;
         this.rounding = 0;
@@ -35,6 +33,18 @@ var CGSGNodeScrollPaneSliderHandle = CGSGNode.extend({
         this.handleWidth = Math.min(this._parentNode.getHeight(), this._parentNode.getWidth()) * 2;
         var width = this._parentNode.getWidth();
         var height = this._parentNode.getHeight();
+
+        var w, h;
+        if (this._parentNode.getWidth() > this._parentNode.getHeight()) {
+            w = this._parentNode.getWidth() / 5 - 2;
+            h = this._parentNode.getHeight() - 2;
+            this.resizeTo(w, h);
+        } else {
+            w = this._parentNode.getWidth() - 2;
+            h = this._parentNode.getHeight() / 5 - 2;
+            this.resizeTo(w, h);
+        }
+
         if (width > height) {
             var x = this.position.x;
             if (x < 0) {
@@ -71,18 +81,15 @@ var CGSGNodeScrollPaneSliderHandle = CGSGNode.extend({
 
         var offset = 1;
 
-        var width;
-        var height;
-        var gradient;
+        var width,
+            height;
 
         if (this._parentNode.getWidth() > this._parentNode.getHeight()) {
             width = this._parentNode.getWidth() / 5 - 2;
             height = this._parentNode.getHeight() - 2;
-            this.resizeTo(width, height);
         } else {
             width = this._parentNode.getWidth() - 2;
             height = this._parentNode.getHeight() / 5 - 2;
-            this.resizeTo(width, height);
         }
 
         var borderRadius = this.rounding;
@@ -126,7 +133,9 @@ var CGSGNodeScrollPaneViewPort = CGSGNode.extend({
     },
 
     draw: function (context) {
+        context.beginPath();
         context.rect(0, 0, this.getWidth(), this.getHeight());
+        context.closePath();
         //Constraint the render of the children in the node's region
         context.clip();
     },
@@ -173,7 +182,6 @@ var CGSGNodeScrollPane = CGSGNode.extend({
 
         this.resizeTo(width, height);
         this._build();
-
     },
 
     /**
@@ -193,10 +201,10 @@ var CGSGNodeScrollPane = CGSGNode.extend({
 
     _buildXSlider: function () {
         //Horizontal slider
-        this.xSlider = new CGSGNodeSlider(0, this._viewport.getHeight(), this._viewport.getWidth(), this.sliderWidth);
+        this.xSlider = new CGSGNodeSlider(0, this._viewport.getHeight(), this._viewport.getWidth(), this.sliderWidth - 10);
 
         //Build the handler of the slider
-        var xHandle = new CGSGNodeScrollPaneSliderHandle(20);
+        var xHandle = new CGSGNodeScrollPaneSliderHandle();
         this.xSlider.rounding = this.rounding;
         this.xSlider.setHandle(xHandle, 0, 0);
         this.xSlider.mustRenderValue = false;
@@ -217,7 +225,7 @@ var CGSGNodeScrollPane = CGSGNode.extend({
         this.ySlider = new CGSGNodeSlider(this._viewport.getWidth(), 0, this.sliderWidth, this._viewport.getHeight());
 
         //Build the handler of the slider
-        var yHandle = new CGSGNodeScrollPaneSliderHandle(20);
+        var yHandle = new CGSGNodeScrollPaneSliderHandle();
         this.ySlider.rounding = this.rounding;
         this.ySlider.setHandle(yHandle, 0, 0);
 
@@ -339,6 +347,10 @@ var CGSGNodeScrollPane = CGSGNode.extend({
         this.dimension.resizeTo(newWidth, newHeight);
         this._viewport.dimension.resizeTo(newWidth,newHeight);
         this.updateViewPort();
+        if (cgsgExist(this.xSlider)) {
+            this.ySlider.handle.onSlide();
+            this.xSlider.handle.onSlide();
+        }
     },
 
     /**
@@ -356,6 +368,10 @@ var CGSGNodeScrollPane = CGSGNode.extend({
         this.dimension.resizeBy(widthFactor, heightFactor);
         this._viewport.dimension.resizeBy(widthFactor,heightFactor);
         this.updateViewPort();
+        if (cgsgExist(this.xSlider)) {
+            this.ySlider.handle.onSlide();
+            this.xSlider.handle.onSlide();
+        }
     },
 
     /**
@@ -373,6 +389,10 @@ var CGSGNodeScrollPane = CGSGNode.extend({
         this.dimension.resizeWith(width, height);
         this._viewport.dimension.resizeWith(width,height);
         this.updateViewPort();
+        if (cgsgExist(this.xSlider)) {
+            this.ySlider.handle.onSlide();
+            this.xSlider.handle.onSlide();
+        }
     },
 
     /**
