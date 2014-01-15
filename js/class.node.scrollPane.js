@@ -1,129 +1,4 @@
-/**
- * A CGSGNodeScrollPaneSliderHandle represent a slider handle
- *
- * @class CGSGNodeScrollPaneSliderHandle
- * @module Node
- * @extends CGSGNode
- * @constructor
- * @param {Number} handleWidth width of the handle
- * @type {CGSGNodeScrollPaneSliderHandle}
- */
-var CGSGNodeScrollPaneSliderHandle = CGSGNode.extend({
 
-    initialize: function () {
-        this._super(0, 0);
-        this.color = "#505050";
-        this.rotationCenter = new CGSGPosition(0.5, 0.5);
-        this.selectionHandleColor = 'rgba(0,0,0,0)';
-        this.selectionLineColor = 'rgba(0,0,0,0)';
-        this.isDraggable = true;
-        this.isRoundingFixed = true;
-        this.rounding = 0;
-        this.onDrag = this.onSlide;
-
-    },
-
-    /**
-     * Restrain movement to x or y axis
-     *
-     * @method onSlide
-     * @protected
-     */
-    onSlide: function () {
-        this.handleWidth = Math.min(this._parentNode.getHeight(), this._parentNode.getWidth()) * 2;
-        var width = this._parentNode.getWidth();
-        var height = this._parentNode.getHeight();
-
-        var w, h;
-        if (this._parentNode.getWidth() > this._parentNode.getHeight()) {
-            w = this._parentNode.getWidth() / 5 - 2;
-            h = this._parentNode.getHeight() - 2;
-            this.resizeTo(w, h);
-        } else {
-            w = this._parentNode.getWidth() - 2;
-            h = this._parentNode.getHeight() / 5 - 2;
-            this.resizeTo(w, h);
-        }
-
-        if (width > height) {
-            var x = this.position.x;
-            if (x < 0) {
-                x = 0;
-            } else if (x > width - this._parentNode.getWidth() / 5) {
-                x = width - this._parentNode.getWidth() / 5;
-            }
-            this.translateTo(x, 0);
-            var scale = width / (width - this.getWidth()),
-                range = this._parentNode.max - this._parentNode.min;
-            this._parentNode.value = ((this.position.x) * (range / width)) * scale + this._parentNode.min;
-        } else {
-            var y = this.position.y;
-            if (y < 0) {
-                y = 0;
-            } else if (y > height - this._parentNode.getHeight() / 5) {
-                y = height - this._parentNode.getHeight() / 5;
-            }
-            this.translateTo(0, y);
-            var scale = height / (height - this.getHeight()),
-                range = this._parentNode.max - this._parentNode.min;
-            this._parentNode.value = ((this.position.y) * (range / height)) * scale + this._parentNode.min;
-        }
-    },
-
-    /**
-     * The handle will look like a pill
-     *
-     * @method render
-     * @protected
-     * @param {CanvasRenderingContext2D} context the context into render the node
-     */
-    render: function (context) {
-
-        var offset = 1;
-
-        var width,
-            height;
-
-        if (this._parentNode.getWidth() > this._parentNode.getHeight()) {
-            width = this._parentNode.getWidth() / 5 - 2;
-            height = this._parentNode.getHeight() - 2;
-        } else {
-            width = this._parentNode.getWidth() - 2;
-            height = this._parentNode.getHeight() / 5 - 2;
-        }
-
-        var borderRadius = this.rounding;
-        if (!this.isRoundingFixed || this.rounding > Math.min(width, height) / 2) {
-            borderRadius = Math.min(width, height) / 2;
-        }
-
-        context.lineWidth = 2;
-        context.fillStyle = this.color;
-        context.strokeStyle = this.color;
-
-        context.save();
-
-        context.translate(offset, offset);
-
-        context.beginPath();
-        context.moveTo(0, borderRadius);
-        context.quadraticCurveTo(0, 0, borderRadius, 0);
-        context.lineTo(width - borderRadius, 0);
-        context.quadraticCurveTo(width, 0, width, borderRadius);
-        context.lineTo(width, height - borderRadius);
-        context.quadraticCurveTo(width, height, width - borderRadius, height);
-        context.lineTo(borderRadius, height);
-        context.quadraticCurveTo(0, height, 0, height - borderRadius);
-        context.lineTo(0, borderRadius);
-        context.closePath();
-
-        context.restore();
-
-        context.fill();
-
-    }
-
-});
 
 var CGSGNodeScrollPaneViewPort = CGSGNode.extend({
 
@@ -195,23 +70,17 @@ var CGSGNodeScrollPane = CGSGNode.extend({
      * */
     _build: function () {
         this.addChild(this._viewport);
-        this._buildYSlider();
         this._buildXSlider();
+        this._buildYSlider();
     },
 
     _buildXSlider: function () {
         //Horizontal slider
-        this.xSlider = new CGSGNodeSlider(0, this._viewport.getHeight(), this._viewport.getWidth(), this.sliderWidth - 10);
-
-        //Build the handler of the slider
-        var xHandle = new CGSGNodeScrollPaneSliderHandle();
-        this.xSlider.rounding = this.rounding;
-        this.xSlider.setHandle(xHandle, 0, 0);
-        this.xSlider.mustRenderValue = false;
+        this.xSlider = new CGSGNodeScrollBar(0, this._viewport.getHeight(), this._viewport.getWidth(), this.sliderWidth);
 
         //bind drag event
-        CGSG.eventManager.bindHandler(this.xSlider.getHandle(), cgsgEventTypes.ON_DRAG, this.onSliderTranslate.bind(this));
-        CGSG.eventManager.bindHandler(this.xSlider.getHandle(), cgsgEventTypes.ON_DRAG_END, this.onSliderTranslateEnd.bind(this));
+        CGSG.eventManager.bindHandler(this.xSlider.handle, cgsgEventTypes.ON_DRAG, this.onSliderTranslate.bind(this));
+        CGSG.eventManager.bindHandler(this.xSlider.handle, cgsgEventTypes.ON_DRAG_END, this.onSliderTranslateEnd.bind(this));
 
         this.addChild(this.xSlider);
 
@@ -222,17 +91,11 @@ var CGSGNodeScrollPane = CGSGNode.extend({
 
     _buildYSlider: function () {
         //vertical Slider
-        this.ySlider = new CGSGNodeSlider(this._viewport.getWidth(), 0, this.sliderWidth, this._viewport.getHeight());
-
-        //Build the handler of the slider
-        var yHandle = new CGSGNodeScrollPaneSliderHandle();
-        this.ySlider.rounding = this.rounding;
-        this.ySlider.setHandle(yHandle, 0, 0);
+        this.ySlider = new CGSGNodeScrollBar(this._viewport.getWidth(), 0, this.sliderWidth, this._viewport.getHeight());
 
         //bind drag event
-        this.ySlider.mustRenderValue = false;
-        CGSG.eventManager.bindHandler(this.ySlider.getHandle(), cgsgEventTypes.ON_DRAG, this.onSliderTranslate.bind(this));
-        CGSG.eventManager.bindHandler(this.ySlider.getHandle(), cgsgEventTypes.ON_DRAG_END, this.onSliderTranslateEnd.bind(this));
+        CGSG.eventManager.bindHandler(this.ySlider.handle, cgsgEventTypes.ON_DRAG, this.onSliderTranslate.bind(this));
+        CGSG.eventManager.bindHandler(this.ySlider.handle, cgsgEventTypes.ON_DRAG_END, this.onSliderTranslateEnd.bind(this));
 
         this.addChild(this.ySlider);
 
@@ -289,19 +152,30 @@ var CGSGNodeScrollPane = CGSGNode.extend({
             if (this.xSlider.isVisible) {
                 this.xSlider.translateTo(0, this._viewport.getHeight(), false);
                 this.xSlider.resizeTo(this._viewport.getWidth(), this.sliderWidth);
+
                 this.xSlider.setMin(0);
                 this.xSlider.setMax(this.viewPortAreaWidth - this._viewport.getWidth());
                 this.xSlider.setValue(0);
+
+                //update the width of the handleBar
+                var ratio = this.contained.getWidth() / this._viewport.getWidth();
+                this.xSlider.handle.resizeTo(this.xSlider.getWidth() / ratio, this.xSlider.getHeight());
+                this.xSlider.handle.onSlide();
             }
 
             if (this.ySlider.isVisible) {
                 this.ySlider.translateTo(this._viewport.getWidth(), 0, false);
                 this.ySlider.resizeTo(this.sliderWidth, this._viewport.getHeight());
+
                 this.ySlider.setMin(0);
                 this.ySlider.setMax(this.viewPortAreaHeight - this._viewport.getHeight());
                 this.ySlider.setValue(0);
-            }
 
+                //update the height tof the handleBar
+                var ratio = this.contained.getHeight() / this._viewport.getHeight();
+                this.ySlider.handle.resizeTo(this.ySlider.getWidth(), this.ySlider.getHeight() / ratio);
+                this.ySlider.handle.onSlide();
+            }
         }
     },
 
@@ -347,10 +221,6 @@ var CGSGNodeScrollPane = CGSGNode.extend({
         this.dimension.resizeTo(newWidth, newHeight);
         this._viewport.dimension.resizeTo(newWidth,newHeight);
         this.updateViewPort();
-        if (cgsgExist(this.xSlider)) {
-            this.ySlider.handle.onSlide();
-            this.xSlider.handle.onSlide();
-        }
     },
 
     /**
@@ -368,10 +238,6 @@ var CGSGNodeScrollPane = CGSGNode.extend({
         this.dimension.resizeBy(widthFactor, heightFactor);
         this._viewport.dimension.resizeBy(widthFactor,heightFactor);
         this.updateViewPort();
-        if (cgsgExist(this.xSlider)) {
-            this.ySlider.handle.onSlide();
-            this.xSlider.handle.onSlide();
-        }
     },
 
     /**
@@ -389,10 +255,6 @@ var CGSGNodeScrollPane = CGSGNode.extend({
         this.dimension.resizeWith(width, height);
         this._viewport.dimension.resizeWith(width,height);
         this.updateViewPort();
-        if (cgsgExist(this.xSlider)) {
-            this.ySlider.handle.onSlide();
-            this.xSlider.handle.onSlide();
-        }
     },
 
     /**
@@ -432,5 +294,4 @@ var CGSGNodeScrollPane = CGSGNode.extend({
             }
         }
     }
-
 });
