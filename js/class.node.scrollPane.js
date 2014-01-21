@@ -89,7 +89,6 @@ var CGSGNodeScrollPane = CGSGNode.extend({
             } else if (event.detail) {
                 delta = -event.detail/3;
             }
-            alert(delta);
 
             var mousePosition = new CGSGPosition(event.x, event.y),
                 node = CGSG.sceneGraph.pickNode(mousePosition, null);
