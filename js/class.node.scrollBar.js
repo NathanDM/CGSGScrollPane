@@ -13,6 +13,9 @@ var CGSGNodeScrollBarHandle = CGSGNode.extend({
 
     initialize: function (handleWidth) {
         this._super(0, 0);
+
+        this.classType = "CGSGNodeScrollBarHandle";
+
         this.resizeTo(handleWidth, handleWidth);
         this.color = "#cdcdcd";
         this.isDraggable = true;
@@ -89,6 +92,9 @@ var CGSGNodeScrollBar = CGSGNode.extend({
 
     initialize: function (x, y, width, height) {
         this._super(x, y);
+
+        this.classType = "CGSGNodeScrollBar";
+
         this.resizeTo(width, height);
         this.backgroundColor = "#f1f1f1";
         this.min = -10;
