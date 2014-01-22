@@ -1,21 +1,18 @@
 /**
- * A CGSGNodeSliderHandle represent a slider handle
+ * A CGSGNodeScrollBarHandle represent a scrollBar handle
  *
- * @class CGSGNodeSliderHandle
+ * @class CGSGNodeScrollBarHandle
  * @module Node
  * @extends CGSGNode
  * @constructor
  * @param {Number} handleWidth width of the handle
  * @type {CGSGNodeSliderHandle}
- * @author Jeremie (jeremie.lussiez@capgemini.com)
+ * @author Nathan (nathan.damie@capgemini.com)
  */
 var CGSGNodeScrollBarHandle = CGSGNode.extend({
 
     initialize: function (handleWidth) {
         this._super(0, 0);
-
-        this.classType = "CGSGNodeScrollBarHandle";
-
         this.resizeTo(handleWidth, handleWidth);
         this.color = "#cdcdcd";
         this.isDraggable = true;
@@ -25,7 +22,7 @@ var CGSGNodeScrollBarHandle = CGSGNode.extend({
     },
 
     /**
-     * Restrain movement to x axis
+     * Restrain movement to x axis or y axis
      *
      * @method onSlide
      * @protected
@@ -59,7 +56,7 @@ var CGSGNodeScrollBarHandle = CGSGNode.extend({
     },
 
     /**
-     * Default handle rendering (A rounded square with some "volume" effect)
+     * Default handle rendering
      *
      * @method render
      * @protected
@@ -75,9 +72,9 @@ var CGSGNodeScrollBarHandle = CGSGNode.extend({
 });
 
 /**
- * A CGSGNodeSlider represent a slider
+ * A CGSGNodeScrollBar represent a scrollPane
  *
- * @class CGSGNodeSlider
+ * @class CGSGNodeScrollBar
  * @module Node
  * @extends CGSGNode
  * @constructor
@@ -85,16 +82,13 @@ var CGSGNodeScrollBarHandle = CGSGNode.extend({
  * @param {Number} y Relative position on Y
  * @param {Number} width Relative dimension
  * @param {Number} height Relative Dimension
- * @type {CGSGNodeSlider}
- * @author Jeremie (jeremie.lussiez@capgemini.com)
+ * @type {CGSGNodeScrollBar}
+ * @author Nathan (nathan.damie@capgemini.com)
  */
 var CGSGNodeScrollBar = CGSGNode.extend({
 
     initialize: function (x, y, width, height) {
         this._super(x, y);
-
-        this.classType = "CGSGNodeScrollBar";
-
         this.resizeTo(width, height);
         this.backgroundColor = "#f1f1f1";
         this.min = -10;
@@ -105,11 +99,11 @@ var CGSGNodeScrollBar = CGSGNode.extend({
     },
 
     /**
-     * Set default or custom handle for this slider
+     * Set default or custom handle for this scrollBar
      *
      * @method setHandle
      * @public
-     * @param {CGSGNode} [handle] slider's handle
+     * @param {CGSGNode} [handle] scrollBar's handle
      */
     setHandle: function (handle) {
         this.removeAll();
